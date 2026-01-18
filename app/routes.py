@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, current_app
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from app import app, db
-from models import Ficha
+from .models import Ficha
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
