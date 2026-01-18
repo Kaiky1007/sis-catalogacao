@@ -72,3 +72,32 @@ td, th {
     font-size: 12px;
     margin-top: 4px;
 }
+
+input[type="text"],
+input[type="date"] {
+    width: 90%;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    background: transparent;
+}
+
+textarea {
+    width: 95%;
+}
+
+.img-preview {
+    max-width: 150px;
+    max-height: 150px;
+    display: block;
+    margin: 0 auto;
+}
+
+.btn-salvar {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}

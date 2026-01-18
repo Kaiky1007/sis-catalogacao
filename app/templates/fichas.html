@@ -5,26 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficha Diagnóstico de Conservação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styleficha.css') }}">
-    <style>
-        /* Pequeno ajuste para os inputs de texto ficarem bonitos na tabela */
-        input[type="text"], input[type="date"] {
-            width: 90%;
-            border: none;
-            border-bottom: 1px solid #ccc;
-            background: transparent;
-        }
-        textarea { width: 95%; }
-        .img-preview { max-width: 150px; max-height: 150px; display: block; margin: 0 auto; }
-        .btn-salvar {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-    </style>
 </head>
 <body>
     
@@ -50,7 +30,7 @@
                             </tr>
                         </table>
                         <div class="numero-ficha">
-                            Nº <input type="text" name="numero_ficha" value="{{ ficha.numero_ficha if ficha else '' }}" style="width: 50px;">
+                            Nº <input type="text" name="numero_ficha" value="{{ ficha.numero_ficha if ficha else '' }}" style="width: 60px;">
                         </div>
                     </td>
                 </tr>
@@ -122,16 +102,20 @@
                 <tr>
                     <td colspan="5">
                         <strong>Encadernação</strong>
-                        <input type="checkbox" name="estado_encadernada" {% if ficha and ficha.estado_conservacao.get('encadernada') %}checked{% endif %}> obra encadernada
-                        <input type="checkbox" name="estado_sem_encadernacao" {% if ficha and ficha.estado_conservacao.get('sem_encadernacao') %}checked{% endif %}> obra sem encadernação
+                        <label>
+                            <input type="checkbox" name="estado_encadernada" {% if ficha and ficha.estado_conservacao.get('encadernada') %}checked{% endif %}> obra encadernada
+                        </label>
+                        <label>
+                            <input type="checkbox" name="estado_sem_encadernacao" {% if ficha and ficha.estado_conservacao.get('sem_encadernacao') %}checked{% endif %}> obra sem encadernação
+                        </label>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="5">
                         <strong>Tipo de encadernação</strong>
-                        <input type="checkbox" name="estado_inteira" {% if ficha and ficha.estado_conservacao.get('inteira') %}checked{% endif %}> inteira
-                        <input type="checkbox" name="estado_meia_com_cantos" {% if ficha and ficha.estado_conservacao.get('meia_com_cantos') %}checked{% endif %}> ½ com cantos
-                        <input type="checkbox" name="estado_meia_sem_cantos" {% if ficha and ficha.estado_conservacao.get('meia_sem_cantos') %}checked{% endif %}> ½ sem cantos
+                        <label><input type="checkbox" name="estado_inteira" {% if ficha and ficha.estado_conservacao.get('inteira') %}checked{% endif %}> inteira</label>
+                        <label><input type="checkbox" name="estado_meia_com_cantos" {% if ficha and ficha.estado_conservacao.get('meia_com_cantos') %}checked{% endif %}> ½ com cantos</label>
+                        <label><input type="checkbox" name="estado_meia_sem_cantos" {% if ficha and ficha.estado_conservacao.get('meia_sem_cantos') %}checked{% endif %}> ½ sem cantos</label>
                     </td>
                 </tr>
 
@@ -250,16 +234,16 @@
                 <tr>
                     <td colspan="3">
                         <strong>OBSERVAÇÕES:</strong><br>
-                        <textarea name="observacoes" rows="5">{{ ficha.observacoes if ficha else '' }}</textarea>
+                        <textarea name="observacoes" rows="5" style="width: 100%;">{{ ficha.observacoes if ficha else '' }}</textarea>
                     </td>
                     <td colspan="2" style="text-align:center; background:#eee; padding: 10px;">
                         {% if ficha and ficha.foto_path %}
                             <img src="{{ url_for('static', filename=ficha.foto_path) }}" class="img-preview">
                             <br>
                         {% else %}
-                            FOTO
+                            <div style="padding: 20px; color: #777;">FOTO INDISPONÍVEL</div>
                         {% endif %}
-                        <input type="file" name="foto" accept="image/*">
+                        <input type="file" name="foto" accept="image/*" style="margin-top: 10px;">
                     </td>
                 </tr>
                 <tr>
@@ -268,9 +252,9 @@
                 </tr>
             </table>
             
-            <div style="text-align: center;">
-                <button type="submit" class="btn-salvar">Salvar Ficha</button>
-                <a href="{{ url_for('index') }}" style="margin-left: 20px;">Voltar</a>
+            <div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
+                <button type="submit" class="btn-salvar" style="padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer;">Salvar Ficha</button>
+                <a href="{{ url_for('listar_acervo') }}" style="margin-left: 20px; text-decoration: none; color: #333; padding: 10px; border: 1px solid #ccc;">Voltar ao Acervo</a>
             </div>
 
         </div>
