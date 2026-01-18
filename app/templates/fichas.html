@@ -3,230 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha Diagnósticao de Conservação</title>
-    <link rel="stylesheet" href="../static/styleficha.css">
+    <title>Ficha Diagnóstico de Conservação</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleficha.css') }}">
+    <style>
+        /* Pequeno ajuste para os inputs de texto ficarem bonitos na tabela */
+        input[type="text"], input[type="date"] {
+            width: 90%;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background: transparent;
+        }
+        textarea { width: 95%; }
+        .img-preview { max-width: 150px; max-height: 150px; display: block; margin: 0 auto; }
+        .btn-salvar {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-    <div class="ficha">
-        <table>
-            <tr>
-                <td colspan="3" class="titulo">FICHA DIAGNÓSTICO DE CONSERVAÇÃO</td>
-                <td colspan="2" style="padding:0;">
-                    <table class="avaliacao">
-                        <tr>
-                            <th>1</th>
-                            <td>Bom</td>
-                        </tr>
-                        <tr>
-                            <th>2</th>
-                            <td>Regular</td>
-                        </tr>
-                        <tr>
-                            <th>3</th>
-                            <td>Mau</td>
-                        </tr>
-                    </table>
-                    <div class="numero-ficha">Nº ________</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" class="subtitulo">IDENTIFICAÇÃO</td>
-            </tr>
-            <tr>
-                <td colspan="2">Autor:</td>
-                <td colspan="3">Título:</td>
-            </tr>
-            <tr>
-                <td>Registro:</td>
-                <td>Nº Chamada:</td>
-                <td colspan="3">Seção de Guarda:</td>
-            </tr>
-            <tr>
-                <td>Data da Obra:</td>
-                <td>Nº de Páginas:</td>
-                <td colspan="3">Dimensões (C x L x E):</td>
-            </tr>
-            <tr>
-                <td colspan="5" class="subtitulo">ESPECIFICAÇÃO DO MATERIAL</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> álbum</td>
-                <td><input type="checkbox"> folheto</td>
-                <td><input type="checkbox"> manuscrito</td>
-                <td><input type="checkbox"> planta</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> brochura</td>
-                <td><input type="checkbox"> gravura</td>
-                <td><input type="checkbox"> mapa</td>
-                <td><input type="checkbox"> pergaminho (scroll)</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> certificado</td>
-                <td><input type="checkbox"> impresso</td>
-                <td><input type="checkbox"> partitura</td>
-                <td>Outro: __________</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> desenho</td>
-                <td><input type="checkbox"> livro</td>
-                <td><input type="checkbox"> periódico</td>
-                <td>Outro: __________</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td colspan="5" class="subtitulo">TIPO DE SUPORTE DA OBRA</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> papel couchê</td>
-                <td><input type="checkbox"> papel jornal</td>
-                <td><input type="checkbox"> papel feito à mão</td>
-                <td><input type="checkbox"> papel madeira</td>
-                <td>Outro: __________</td>
-            </tr>
-            <tr>
-                <td colspan="5" class="subtitulo">ESTADO GERAL DE CONSERVAÇÃO</td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <strong>Encadernação</strong>
-                    <input type="checkbox"> obra encadernada
-                    <input type="checkbox"> obra sem encadernação
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <strong>Tipo de encadernação</strong>
-                    <input type="checkbox"> inteira
-                    <input type="checkbox"> ½ com cantos
-                    <input type="checkbox"> ½ sem cantos
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" class="subtitulo">PRINCIPAIS DETERIORAÇÕES</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> abrasão</td>
-                <td><input type="checkbox"> costura fragilizada</td>
-                <td><input type="checkbox"> mancha</td>
-                <td><input type="checkbox"> rompimento</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> arranhão</td>
-                <td><input type="checkbox"> descoloração</td>
-                <td><input type="checkbox"> perda de lombada</td>
-                <td><input type="checkbox"> sujidades</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td colspan="5" class="titulo">MÉTODO DE CONSERVAÇÃO DE OBRAS</td>
-            </tr>
-            <tr>
-                <td colspan="5"><strong>1- TRATAMENTO TÉCNICO DE CONSERVAÇÃO – DOCUMENTOS PLANOS</strong></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> diagnóstico</td>
-                <td><input type="checkbox"> retirada de sujidades extrínsecas da obra</td>
-                <td><input type="checkbox"> com trincha macia f/v por varredura</td>
-                <td colspan="2"></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> higienização</td>
-                <td><input type="checkbox"> retirada de fitas adesivas</td>
-                <td><input type="checkbox"> com pó de borracha e trincha macia f/v por varredura</td>
-                <td colspan="2"></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td><input type="checkbox"> desacidificação a seco</td>
-                <td><input type="checkbox"> arrefecimento de manchas</td>
-                <td colspan="2">Outro: __________</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> reestruturação</td>
-                <td><input type="checkbox"> remendos</td>
-                <td><input type="checkbox"> enxertos</td>
-                <td><input type="checkbox"> velaturas</td>
-                <td>Outro: __________</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> planificação</td>
-                <td colspan="4"></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> acondicionamento</td>
-                <td><input type="checkbox"> portfólio</td>
-                <td><input type="checkbox"> passe-partout</td>
-                <td><input type="checkbox"> pasta</td>
-                <td>Outro: __________</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td><input type="checkbox"> envelope</td>
-                <td><input type="checkbox"> jaqueta de poliéster</td>
-                <td colspan="2">Outro: __________</td>
-            </tr>
-            <tr>
-                <td colspan="5"><strong>2- TRATAMENTO TÉCNICO DE CONSERVAÇÃO – VOLUMES</strong></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> fumigação</td>
-                <td colspan="2">
-                    <input type="checkbox"> fungos – produto ____________________ %
-                </td>
-                <td colspan="2">
-                    <input type="checkbox"> insetos – produto ____________________ %
-                </td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> higienização</td>
-                <td colspan="4">
-                    <input type="checkbox"> com trincha macia, folhas e capas f/v por varredura
-                </td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> reestruturação</td>
-                <td><input type="checkbox"> lombada</td>
-                <td><input type="checkbox"> lombada e capa</td>
-                <td><input type="checkbox"> folhas (miolo)</td>
-                <td>Outro: __________</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> encadernação</td>
-                <td><input type="checkbox"> inteira</td>
-                <td><input type="checkbox"> ½ sem cantos</td>
-                <td><input type="checkbox"> costura</td>
-                <td>Outro: __________</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> douração</td>
-                <td><input type="checkbox"> a punho</td>
-                <td><input type="checkbox"> à máquina</td>
-                <td colspan="2"></td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"> acondicionamento</td>
-                <td><input type="checkbox"> caixa em cruz</td>
-                <td><input type="checkbox"> caixa com cadarço</td>
-                <td colspan="2">Outro: __________</td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <strong>OBSERVAÇÕES:</strong><br><br><br><br><br>
-                </td>
-                <td colspan="2" style="text-align:center; background:#eee;">
-                    FOTO
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">Técnico: ________________________________</td>
-                <td colspan="2">Data: ____ / ____ / ______</td>
-            </tr>
-        </table>
-    </div>
+    
+    <form action="{{ url_for('criar_ficha') }}" method="POST" enctype="multipart/form-data">
+        
+        <div class="ficha">
+            <table>
+                <tr>
+                    <td colspan="3" class="titulo">FICHA DIAGNÓSTICO DE CONSERVAÇÃO</td>
+                    <td colspan="2" style="padding:0;">
+                        <table class="avaliacao">
+                            <tr>
+                                <th><input type="radio" name="avaliacao" value="1" {% if ficha and ficha.avaliacao == 1 %}checked{% endif %}></th>
+                                <td>Bom</td>
+                            </tr>
+                            <tr>
+                                <th><input type="radio" name="avaliacao" value="2" {% if ficha and ficha.avaliacao == 2 %}checked{% endif %}></th>
+                                <td>Regular</td>
+                            </tr>
+                            <tr>
+                                <th><input type="radio" name="avaliacao" value="3" {% if ficha and ficha.avaliacao == 3 %}checked{% endif %}></th>
+                                <td>Mau</td>
+                            </tr>
+                        </table>
+                        <div class="numero-ficha">
+                            Nº <input type="text" name="numero_ficha" value="{{ ficha.numero_ficha if ficha else '' }}" style="width: 50px;">
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td colspan="5" class="subtitulo">IDENTIFICAÇÃO</td>
+                </tr>
+                <tr>
+                    <td colspan="2">Autor: <input type="text" name="autor" value="{{ ficha.autor if ficha else '' }}"></td>
+                    <td colspan="3">Título: <input type="text" name="titulo" value="{{ ficha.titulo if ficha else '' }}"></td>
+                </tr>
+                <tr>
+                    <td>Registro: <input type="text" name="registro" value="{{ ficha.registro if ficha else '' }}"></td>
+                    <td>Nº Chamada: <input type="text" name="n_chamada" value="{{ ficha.n_chamada if ficha else '' }}"></td>
+                    <td colspan="3">Seção de Guarda: <input type="text" name="secao_guarda" value="{{ ficha.secao_guarda if ficha else '' }}"></td>
+                </tr>
+                <tr>
+                    <td>Data da Obra: <input type="text" name="data_obra" value="{{ ficha.data_obra if ficha else '' }}"></td>
+                    <td>Nº de Páginas: <input type="text" name="paginas" value="{{ ficha.paginas if ficha else '' }}"></td>
+                    <td colspan="3">Dimensões (C x L x E): <input type="text" name="dimensoes" value="{{ ficha.dimensoes if ficha else '' }}"></td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" class="subtitulo">ESPECIFICAÇÃO DO MATERIAL</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="material_album" {% if ficha and ficha.especificacao_material.get('album') %}checked{% endif %}> álbum</td>
+                    <td><input type="checkbox" name="material_folheto" {% if ficha and ficha.especificacao_material.get('folheto') %}checked{% endif %}> folheto</td>
+                    <td><input type="checkbox" name="material_manuscrito" {% if ficha and ficha.especificacao_material.get('manuscrito') %}checked{% endif %}> manuscrito</td>
+                    <td><input type="checkbox" name="material_planta" {% if ficha and ficha.especificacao_material.get('planta') %}checked{% endif %}> planta</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="material_brochura" {% if ficha and ficha.especificacao_material.get('brochura') %}checked{% endif %}> brochura</td>
+                    <td><input type="checkbox" name="material_gravura" {% if ficha and ficha.especificacao_material.get('gravura') %}checked{% endif %}> gravura</td>
+                    <td><input type="checkbox" name="material_mapa" {% if ficha and ficha.especificacao_material.get('mapa') %}checked{% endif %}> mapa</td>
+                    <td><input type="checkbox" name="material_pergaminho" {% if ficha and ficha.especificacao_material.get('pergaminho') %}checked{% endif %}> pergaminho (scroll)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="material_certificado" {% if ficha and ficha.especificacao_material.get('certificado') %}checked{% endif %}> certificado</td>
+                    <td><input type="checkbox" name="material_impresso" {% if ficha and ficha.especificacao_material.get('impresso') %}checked{% endif %}> impresso</td>
+                    <td><input type="checkbox" name="material_partitura" {% if ficha and ficha.especificacao_material.get('partitura') %}checked{% endif %}> partitura</td>
+                    <td>Outro: <input type="text" name="material_outro" value="{{ ficha.especificacao_material.get('outro_texto', '') if ficha and ficha.especificacao_material else '' }}"></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="material_desenho" {% if ficha and ficha.especificacao_material.get('desenho') %}checked{% endif %}> desenho</td>
+                    <td><input type="checkbox" name="material_livro" {% if ficha and ficha.especificacao_material.get('livro') %}checked{% endif %}> livro</td>
+                    <td><input type="checkbox" name="material_periodico" {% if ficha and ficha.especificacao_material.get('periodico') %}checked{% endif %}> periódico</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" class="subtitulo">TIPO DE SUPORTE DA OBRA</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="suporte_couche" {% if ficha and ficha.tipo_suporte.get('couche') %}checked{% endif %}> papel couchê</td>
+                    <td><input type="checkbox" name="suporte_jornal" {% if ficha and ficha.tipo_suporte.get('jornal') %}checked{% endif %}> papel jornal</td>
+                    <td><input type="checkbox" name="suporte_feito_mao" {% if ficha and ficha.tipo_suporte.get('feito_mao') %}checked{% endif %}> papel feito à mão</td>
+                    <td><input type="checkbox" name="suporte_madeira" {% if ficha and ficha.tipo_suporte.get('madeira') %}checked{% endif %}> papel madeira</td>
+                    <td>Outro: <input type="text" name="suporte_outro" value="{{ ficha.tipo_suporte.get('outro_texto', '') if ficha and ficha.tipo_suporte else '' }}"></td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" class="subtitulo">ESTADO GERAL DE CONSERVAÇÃO</td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <strong>Encadernação</strong>
+                        <input type="checkbox" name="estado_encadernada" {% if ficha and ficha.estado_conservacao.get('encadernada') %}checked{% endif %}> obra encadernada
+                        <input type="checkbox" name="estado_sem_encadernacao" {% if ficha and ficha.estado_conservacao.get('sem_encadernacao') %}checked{% endif %}> obra sem encadernação
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <strong>Tipo de encadernação</strong>
+                        <input type="checkbox" name="estado_inteira" {% if ficha and ficha.estado_conservacao.get('inteira') %}checked{% endif %}> inteira
+                        <input type="checkbox" name="estado_meia_com_cantos" {% if ficha and ficha.estado_conservacao.get('meia_com_cantos') %}checked{% endif %}> ½ com cantos
+                        <input type="checkbox" name="estado_meia_sem_cantos" {% if ficha and ficha.estado_conservacao.get('meia_sem_cantos') %}checked{% endif %}> ½ sem cantos
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" class="subtitulo">PRINCIPAIS DETERIORAÇÕES</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="det_abrasao" {% if ficha and ficha.deterioracoes.get('abrasao') %}checked{% endif %}> abrasão</td>
+                    <td><input type="checkbox" name="det_costura_fragil" {% if ficha and ficha.deterioracoes.get('costura_fragil') %}checked{% endif %}> costura fragilizada</td>
+                    <td><input type="checkbox" name="det_mancha" {% if ficha and ficha.deterioracoes.get('mancha') %}checked{% endif %}> mancha</td>
+                    <td><input type="checkbox" name="det_rompimento" {% if ficha and ficha.deterioracoes.get('rompimento') %}checked{% endif %}> rompimento</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="det_arranhao" {% if ficha and ficha.deterioracoes.get('arranhao') %}checked{% endif %}> arranhão</td>
+                    <td><input type="checkbox" name="det_descoloracao" {% if ficha and ficha.deterioracoes.get('descoloracao') %}checked{% endif %}> descoloração</td>
+                    <td><input type="checkbox" name="det_perda_lombada" {% if ficha and ficha.deterioracoes.get('perda_lombada') %}checked{% endif %}> perda de lombada</td>
+                    <td><input type="checkbox" name="det_sujidades" {% if ficha and ficha.deterioracoes.get('sujidades') %}checked{% endif %}> sujidades</td>
+                    <td></td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" class="titulo">MÉTODO DE CONSERVAÇÃO DE OBRAS</td>
+                </tr>
+                <tr>
+                    <td colspan="5"><strong>1- TRATAMENTO TÉCNICO DE CONSERVAÇÃO – DOCUMENTOS PLANOS</strong></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_plano_diagnostico" {% if ficha and ficha.tratamento_planos.get('diagnostico') %}checked{% endif %}> diagnóstico</td>
+                    <td><input type="checkbox" name="trat_plano_retirada_sujidades" {% if ficha and ficha.tratamento_planos.get('retirada_sujidades') %}checked{% endif %}> retirada de sujidades extrínsecas</td>
+                    <td><input type="checkbox" name="trat_plano_trincha" {% if ficha and ficha.tratamento_planos.get('trincha') %}checked{% endif %}> com trincha macia f/v</td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_plano_higienizacao" {% if ficha and ficha.tratamento_planos.get('higienizacao') %}checked{% endif %}> higienização</td>
+                    <td><input type="checkbox" name="trat_plano_retirada_fitas" {% if ficha and ficha.tratamento_planos.get('retirada_fitas') %}checked{% endif %}> retirada de fitas adesivas</td>
+                    <td><input type="checkbox" name="trat_plano_po_borracha" {% if ficha and ficha.tratamento_planos.get('po_borracha') %}checked{% endif %}> com pó de borracha</td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><input type="checkbox" name="trat_plano_desacidificacao" {% if ficha and ficha.tratamento_planos.get('desacidificacao') %}checked{% endif %}> desacidificação a seco</td>
+                    <td><input type="checkbox" name="trat_plano_arrefecimento" {% if ficha and ficha.tratamento_planos.get('arrefecimento') %}checked{% endif %}> arrefecimento de manchas</td>
+                    <td colspan="2">Outro: <input type="text" name="trat_plano_outro" value="{{ ficha.tratamento_planos.get('outro_texto', '') if ficha and ficha.tratamento_planos else '' }}"></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_plano_reestruturacao" {% if ficha and ficha.tratamento_planos.get('reestruturacao') %}checked{% endif %}> reestruturação</td>
+                    <td><input type="checkbox" name="trat_plano_remendos" {% if ficha and ficha.tratamento_planos.get('remendos') %}checked{% endif %}> remendos</td>
+                    <td><input type="checkbox" name="trat_plano_enxertos" {% if ficha and ficha.tratamento_planos.get('enxertos') %}checked{% endif %}> enxertos</td>
+                    <td><input type="checkbox" name="trat_plano_velaturas" {% if ficha and ficha.tratamento_planos.get('velaturas') %}checked{% endif %}> velaturas</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_plano_planificacao" {% if ficha and ficha.tratamento_planos.get('planificacao') %}checked{% endif %}> planificação</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_plano_acondicionamento" {% if ficha and ficha.tratamento_planos.get('acondicionamento') %}checked{% endif %}> acondicionamento</td>
+                    <td><input type="checkbox" name="trat_plano_portfolio" {% if ficha and ficha.tratamento_planos.get('portfolio') %}checked{% endif %}> portfólio</td>
+                    <td><input type="checkbox" name="trat_plano_passe_partout" {% if ficha and ficha.tratamento_planos.get('passe_partout') %}checked{% endif %}> passe-partout</td>
+                    <td><input type="checkbox" name="trat_plano_pasta" {% if ficha and ficha.tratamento_planos.get('pasta') %}checked{% endif %}> pasta</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><input type="checkbox" name="trat_plano_envelope" {% if ficha and ficha.tratamento_planos.get('envelope') %}checked{% endif %}> envelope</td>
+                    <td><input type="checkbox" name="trat_plano_jaqueta" {% if ficha and ficha.tratamento_planos.get('jaqueta') %}checked{% endif %}> jaqueta de poliéster</td>
+                    <td colspan="2"></td>
+                </tr>
+
+                <tr>
+                    <td colspan="5"><strong>2- TRATAMENTO TÉCNICO DE CONSERVAÇÃO – VOLUMES</strong></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_vol_fumigacao" {% if ficha and ficha.tratamento_volumes.get('fumigacao') %}checked{% endif %}> fumigação</td>
+                    <td colspan="2">
+                        <input type="checkbox" name="trat_vol_fungos" {% if ficha and ficha.tratamento_volumes.get('fungos') %}checked{% endif %}> fungos
+                    </td>
+                    <td colspan="2">
+                        <input type="checkbox" name="trat_vol_insetos" {% if ficha and ficha.tratamento_volumes.get('insetos') %}checked{% endif %}> insetos
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_vol_higienizacao" {% if ficha and ficha.tratamento_volumes.get('higienizacao') %}checked{% endif %}> higienização</td>
+                    <td colspan="4">
+                        <input type="checkbox" name="trat_vol_trincha" {% if ficha and ficha.tratamento_volumes.get('trincha') %}checked{% endif %}> com trincha macia (folhas e capas)
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_vol_reestruturacao" {% if ficha and ficha.tratamento_volumes.get('reestruturacao') %}checked{% endif %}> reestruturação</td>
+                    <td><input type="checkbox" name="trat_vol_lombada" {% if ficha and ficha.tratamento_volumes.get('lombada') %}checked{% endif %}> lombada</td>
+                    <td><input type="checkbox" name="trat_vol_lombada_capa" {% if ficha and ficha.tratamento_volumes.get('lombada_capa') %}checked{% endif %}> lombada e capa</td>
+                    <td><input type="checkbox" name="trat_vol_folhas" {% if ficha and ficha.tratamento_volumes.get('folhas') %}checked{% endif %}> folhas (miolo)</td>
+                    <td>Outro: <input type="text" name="trat_vol_outro" value="{{ ficha.tratamento_volumes.get('outro_texto', '') if ficha and ficha.tratamento_volumes else '' }}"></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_vol_encadernacao" {% if ficha and ficha.tratamento_volumes.get('encadernacao') %}checked{% endif %}> encadernação</td>
+                    <td><input type="checkbox" name="trat_vol_inteira" {% if ficha and ficha.tratamento_volumes.get('inteira') %}checked{% endif %}> inteira</td>
+                    <td><input type="checkbox" name="trat_vol_meia_sem_cantos" {% if ficha and ficha.tratamento_volumes.get('meia_sem_cantos') %}checked{% endif %}> ½ sem cantos</td>
+                    <td><input type="checkbox" name="trat_vol_costura" {% if ficha and ficha.tratamento_volumes.get('costura') %}checked{% endif %}> costura</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_vol_douracao" {% if ficha and ficha.tratamento_volumes.get('douracao') %}checked{% endif %}> douração</td>
+                    <td><input type="checkbox" name="trat_vol_punho" {% if ficha and ficha.tratamento_volumes.get('punho') %}checked{% endif %}> a punho</td>
+                    <td><input type="checkbox" name="trat_vol_maquina" {% if ficha and ficha.tratamento_volumes.get('maquina') %}checked{% endif %}> à máquina</td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="trat_vol_acondicionamento" {% if ficha and ficha.tratamento_volumes.get('acondicionamento') %}checked{% endif %}> acondicionamento</td>
+                    <td><input type="checkbox" name="trat_vol_caixa_cruz" {% if ficha and ficha.tratamento_volumes.get('caixa_cruz') %}checked{% endif %}> caixa em cruz</td>
+                    <td><input type="checkbox" name="trat_vol_caixa_cadarco" {% if ficha and ficha.tratamento_volumes.get('caixa_cadarco') %}checked{% endif %}> caixa com cadarço</td>
+                    <td colspan="2"></td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">
+                        <strong>OBSERVAÇÕES:</strong><br>
+                        <textarea name="observacoes" rows="5">{{ ficha.observacoes if ficha else '' }}</textarea>
+                    </td>
+                    <td colspan="2" style="text-align:center; background:#eee; padding: 10px;">
+                        {% if ficha and ficha.foto_path %}
+                            <img src="{{ url_for('static', filename=ficha.foto_path) }}" class="img-preview">
+                            <br>
+                        {% else %}
+                            FOTO
+                        {% endif %}
+                        <input type="file" name="foto" accept="image/*">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">Técnico: <input type="text" name="tecnico_nome" value="{{ ficha.tecnico_nome if ficha else '' }}"></td>
+                    <td colspan="2">Data: <input type="date" name="data_preenchimento" value="{{ ficha.data_preenchimento if ficha else '' }}"></td>
+                </tr>
+            </table>
+            
+            <div style="text-align: center;">
+                <button type="submit" class="btn-salvar">Salvar Ficha</button>
+                <a href="{{ url_for('index') }}" style="margin-left: 20px;">Voltar</a>
+            </div>
+
+        </div>
+    </form>
 </body>
 </html>
