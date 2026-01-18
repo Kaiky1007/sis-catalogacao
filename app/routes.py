@@ -1,11 +1,10 @@
 import os
 import pandas as pd
-from flask import render_template, request, redirect, url_for, current_app
+from flask import render_template, request, redirect, url_for, current_app, flash
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from app import app, db
 from .models import Ficha
-from flask import flash
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -71,32 +70,26 @@ def criar_ficha():
             tecnico_nome=request.form.get('tecnico_nome'),
             data_preenchimento=data_obj,
             foto_path=caminho_relativo,
-
             especificacao_material=processar_grupo_checkbox('material', 
                 ['album', 'folheto', 'manuscrito', 'planta', 'brochura', 'gravura', 
                  'mapa', 'pergaminho', 'certificado', 'impresso', 'partitura', 'desenho', 'livro', 'periodico'], 
                 request.form),
-
             tipo_suporte=processar_grupo_checkbox('suporte', 
                 ['couche', 'jornal', 'feito_mao', 'madeira'], 
                 request.form),
-
             estado_conservacao=processar_grupo_checkbox('estado', 
                 ['encadernada', 'sem_encadernacao', 'inteira', 'meia_com_cantos', 'meia_sem_cantos'], 
                 request.form),
-
             deterioracoes=processar_grupo_checkbox('det', 
                 ['abrasao', 'costura_fragil', 'mancha', 'rompimento', 'arranhao', 
                  'descoloracao', 'perda_lombada', 'sujidades'], 
                 request.form),
-
             tratamento_planos=processar_grupo_checkbox('trat_plano', 
                 ['diagnostico', 'retirada_sujidades', 'trincha', 'higienizacao', 'retirada_fitas', 
                  'po_borracha', 'desacidificacao', 'arrefecimento', 'reestruturacao', 'remendos', 
                  'enxertos', 'velaturas', 'planificacao', 'acondicionamento', 'portfolio', 
                  'passe_partout', 'pasta', 'envelope', 'jaqueta'], 
                 request.form),
-                
             tratamento_volumes=processar_grupo_checkbox('trat_vol', 
                 ['fumigacao', 'fungos', 'insetos', 'higienizacao', 'trincha', 'reestruturacao', 
                  'lombada', 'lombada_capa', 'folhas', 'encadernacao', 'inteira', 'meia_sem_cantos', 
@@ -122,21 +115,21 @@ def ver_ficha(id):
 @app.route('/acervo')
 def listar_acervo():
     fichas = Ficha.query.order_by(Ficha.id.desc()).all()
-    return render_template('lista.html', fichas=fichas) 
+    return render_template('lista.html', fichas=fichas)
 
 def converter_booleano(valor):
-    if pd.isna(valor) or valor == '':
+    if pd.isna(valor) or valor == '': 
         return False
     val_str = str(valor).lower().strip()
     return val_str in ['sim', 's', 'true', '1', 'x', 'yes', 'checked']
 
 def converter_avaliacao(valor):
-    if pd.isna(valor):
+    if pd.isna(valor): 
         return 2
     val_str = str(valor).lower().strip()
-    if 'bom' in val_str:
+    if val_str in ['1', 'bom']: 
         return 1
-    if 'mau' in val_str or 'ruim' in val_str:
+    if val_str in ['3', 'mau', 'ruim']: 
         return 3
     return 2
 
@@ -157,118 +150,106 @@ def importar_planilha():
         else:
             df = pd.read_excel(arquivo)
         
+        df.columns = df.columns.str.strip()
+
         imported_count = 0
         
-        for index, row in df.iterrows():
-            num_ficha = str(row.get('numero_ficha', ''))
+        for row in df.itertuples(index=False):
+            num_ficha = str(getattr(row, 'id', getattr(row, 'numero_ficha', ''))).split('.')[0]
+            
             if not num_ficha or Ficha.query.filter_by(numero_ficha=num_ficha).first():
                 continue 
 
-            data_str = str(row.get('data', ''))
+            data_str = str(getattr(row, 'data_final', datetime.now().date()))
             try:
-                data_final = pd.to_datetime(data_str, dayfirst=True).date()
+                data_final = pd.to_datetime(data_str).date()
             except:
                 data_final = datetime.now().date()
 
             nova_ficha = Ficha(
                 numero_ficha=num_ficha,
-                avaliacao=converter_avaliacao(row.get('avaliacao')),
-                autor=row.get('autor', ''),
-                titulo=row.get('titulo', ''),
-                registro=str(row.get('registro', '')),
-                n_chamada=str(row.get('n_chamada', '')),
-                secao_guarda=row.get('secao_guarda', ''),
-                data_obra=str(row.get('data_obra', '')),
-                paginas=str(row.get('paginas', '')),
-                dimensoes=str(row.get('dimensoes', '')),
-                observacoes=row.get('observacoes', ''),
-                tecnico_nome=row.get('tecnico', ''),
-                foto_path=row.get('caminho_foto', ''),
+                avaliacao=converter_avaliacao(getattr(row, 'estado_geral', None)),
+                autor=getattr(row, 'autor', ''),
+                titulo=getattr(row, 'titulo', ''),
+                registro=str(getattr(row, 'registro', '')).replace('.0', ''),
+                n_chamada=str(getattr(row, 'num_chamada', '')).replace('.0', ''),
+                secao_guarda=getattr(row, 'secao_guarda', ''),
+                data_obra=str(getattr(row, 'data_obra', '')),
+                paginas=str(getattr(row, 'num_paginas', '')).replace('.0', ''),
+                dimensoes=str(getattr(row, 'dimensoes', '')),
+                observacoes=getattr(row, 'observacoes', ''),
+                tecnico_nome=getattr(row, 'tecnico', ''),
                 data_preenchimento=data_final,
                 especificacao_material={
-                    'album': converter_booleano(row.get('album')),
-                    'folheto': converter_booleano(row.get('folheto')),
-                    'manuscrito': converter_booleano(row.get('manuscrito')),
-                    'planta': converter_booleano(row.get('planta')),
-                    'brochura': converter_booleano(row.get('brochura')),
-                    'gravura': converter_booleano(row.get('gravura')),
-                    'mapa': converter_booleano(row.get('mapa')),
-                    'pergaminho': converter_booleano(row.get('pergaminho')),
-                    'certificado': converter_booleano(row.get('certificado')),
-                    'impresso': converter_booleano(row.get('impresso')),
-                    'partitura': converter_booleano(row.get('partitura')),
-                    'desenho': converter_booleano(row.get('desenho')),
-                    'livro': converter_booleano(row.get('livro')),
-                    'periodico': converter_booleano(row.get('periodico')),
-                    'outro_texto': row.get('material_outro', '')
+                    'album': converter_booleano(getattr(row, 'espec_album', None)),
+                    'folheto': converter_booleano(getattr(row, 'espec_folheto', None)),
+                    'manuscrito': converter_booleano(getattr(row, 'espec_manuscrito', None)),
+                    'planta': converter_booleano(getattr(row, 'espec_planta', None)),
+                    'brochura': converter_booleano(getattr(row, 'espec_brochura', None)),
+                    'gravura': converter_booleano(getattr(row, 'espec_gravura', None)),
+                    'mapa': converter_booleano(getattr(row, 'espec_mapa', None)),
+                    'pergaminho': converter_booleano(getattr(row, 'espec_pergaminho_scroll', None)),
+                    'certificado': converter_booleano(getattr(row, 'espec_certificado', None)),
+                    'impresso': converter_booleano(getattr(row, 'espec_impresso', None)),
+                    'partitura': converter_booleano(getattr(row, 'espec_partitura', None)),
+                    'desenho': converter_booleano(getattr(row, 'espec_desenho', None)),
+                    'livro': converter_booleano(getattr(row, 'espec_livro', None)),
+                    'periodico': converter_booleano(getattr(row, 'espec_periodico', None)),
+                    'outro_texto': ''
                 },
                 tipo_suporte={
-                    'couche': converter_booleano(row.get('papel_couche')),
-                    'jornal': converter_booleano(row.get('papel_jornal')),
-                    'feito_mao': converter_booleano(row.get('papel_feito_mao')),
-                    'madeira': converter_booleano(row.get('papel_madeira')),
-                    'outro_texto': row.get('suporte_outro', '')
+                    'couche': converter_booleano(getattr(row, 'sup_papel_couche', None)),
+                    'jornal': converter_booleano(getattr(row, 'sup_papel_jornal', None)),
+                    'feito_mao': converter_booleano(getattr(row, 'sup_papel_feito_a_mao', None)),
+                    'madeira': converter_booleano(getattr(row, 'sup_papel_madeira', None)),
+                    'trapo': converter_booleano(getattr(row, 'sup_papel_trapo', None)),
+                    'marmorizado': converter_booleano(getattr(row, 'sup_papel_marmorizado', None))
                 },
                 estado_conservacao={
-                    'encadernada': converter_booleano(row.get('obra_encadernada')),
-                    'sem_encadernacao': converter_booleano(row.get('obra_sem_encadernacao')),
-                    'inteira': converter_booleano(row.get('encadernacao_inteira')),
-                    'meia_com_cantos': converter_booleano(row.get('meia_com_cantos')),
-                    'meia_sem_cantos': converter_booleano(row.get('meia_sem_cantos'))
+                    'encadernada': converter_booleano(getattr(row, 'enc_tipo', None) == 'Encadernada' or not converter_booleano(getattr(row, 'sem_encadernacao', None))),
+                    'sem_encadernacao': converter_booleano(getattr(row, 'sem_encadernacao', None)),
+                    'tapa_madeira': converter_booleano(getattr(row, 'tapa_madeira', None)),
+                    'tapa_papelao': converter_booleano(getattr(row, 'tapa_papelao', None)),
+                    'capa_couro': converter_booleano(getattr(row, 'capa_couro', None)),
+                    'capa_tecido': converter_booleano(getattr(row, 'capa_tecido', None))
                 },
                 deterioracoes={
-                    'abrasao': converter_booleano(row.get('abrasao')),
-                    'costura_fragil': converter_booleano(row.get('costura_fragil')),
-                    'mancha': converter_booleano(row.get('mancha')),
-                    'rompimento': converter_booleano(row.get('rompimento')),
-                    'arranhao': converter_booleano(row.get('arranhao')),
-                    'descoloracao': converter_booleano(row.get('descoloracao')),
-                    'perda_lombada': converter_booleano(row.get('perda_lombada')),
-                    'sujidades': converter_booleano(row.get('sujidades'))
+                    'abrasao': converter_booleano(getattr(row, 'det_enc_abrasao', None)),
+                    'arranhao': converter_booleano(getattr(row, 'det_enc_arranhao', None)),
+                    'costura_fragil': converter_booleano(getattr(row, 'det_enc_costura_fragilizada', None)),
+                    'descoloracao': converter_booleano(getattr(row, 'det_enc_descoloracao', None)),
+                    'lombada_quebrada': converter_booleano(getattr(row, 'det_enc_lombada_quebrada', None)),
+                    'mancha': converter_booleano(getattr(row, 'det_enc_mancha', None)) or converter_booleano(getattr(row, 'det_miolo_mancha', None)),
+                    'rompimento': converter_booleano(getattr(row, 'det_enc_rompimento', None)),
+                    'sujidades': converter_booleano(getattr(row, 'det_enc_sujidades', None)) or converter_booleano(getattr(row, 'det_miolo_sujidade', None)),
+                    'fungos': converter_booleano(getattr(row, 'det_miolo_fungos', None)),
+                    'oxidacao': converter_booleano(getattr(row, 'det_miolo_oxidacao', None))
                 },
                 tratamento_planos={
-                    'diagnostico': converter_booleano(row.get('diagnostico')),
-                    'retirada_sujidades': converter_booleano(row.get('retirada_sujidades')),
-                    'trincha': converter_booleano(row.get('trincha_macia')),
-                    'higienizacao': converter_booleano(row.get('higienizacao')),
-                    'retirada_fitas': converter_booleano(row.get('retirada_fitas')),
-                    'po_borracha': converter_booleano(row.get('po_borracha')),
-                    'desacidificacao': converter_booleano(row.get('desacidificacao')),
-                    'arrefecimento': converter_booleano(row.get('arrefecimento')),
-                    'reestruturacao': converter_booleano(row.get('reestruturacao')),
-                    'remendos': converter_booleano(row.get('remendos')),
-                    'enxertos': converter_booleano(row.get('enxertos')),
-                    'velaturas': converter_booleano(row.get('velaturas')),
-                    'planificacao': converter_booleano(row.get('planificacao')),
-                    'acondicionamento': converter_booleano(row.get('acondicionamento')),
-                    'portfolio': converter_booleano(row.get('portfolio')),
-                    'passe_partout': converter_booleano(row.get('passe_partout')),
-                    'pasta': converter_booleano(row.get('pasta')),
-                    'envelope': converter_booleano(row.get('envelope')),
-                    'jaqueta': converter_booleano(row.get('jaqueta')),
-                    'outro_texto': row.get('tratamento_plano_outro', '')
+                    'diagnostico': converter_booleano(getattr(row, 'trat_plano_diagnostico', None)),
+                    'higienizacao': converter_booleano(getattr(row, 'trat_plano_higienizacao', None)),
+                    'retirada_sujidades': converter_booleano(getattr(row, 'trat_plano_retirada_de_sujidades_extrinsecas', None)),
+                    'retirada_fitas': converter_booleano(getattr(row, 'trat_plano_retirada_de_fitas_adesivas', None)),
+                    'desacidificacao': converter_booleano(getattr(row, 'trat_plano_desacidificacao_a_seco', None)),
+                    'arrefecimento': converter_booleano(getattr(row, 'trat_plano_arrefecimento_de_manchas', None)),
+                    'reestruturacao': converter_booleano(getattr(row, 'trat_plano_reestruturacao', None)),
+                    'remendos': converter_booleano(getattr(row, 'trat_plano_remendos', None)),
+                    'enxertos': converter_booleano(getattr(row, 'trat_plano_enxertos', None)),
+                    'velaturas': converter_booleano(getattr(row, 'trat_plano_velaturas', None)),
+                    'planificacao': converter_booleano(getattr(row, 'trat_plano_planificacao', None)),
+                    'acondicionamento': converter_booleano(getattr(row, 'trat_plano_acondicionamento', None)),
+                    'portfolio': converter_booleano(getattr(row, 'trat_plano_portfolio', None)),
+                    'envelope': converter_booleano(getattr(row, 'trat_plano_envelope', None)),
+                    'passe_partout': converter_booleano(getattr(row, 'trat_plano_passe_partout', None)),
+                    'pasta': converter_booleano(getattr(row, 'trat_plano_pasta', None)),
+                    'jaqueta': converter_booleano(getattr(row, 'trat_plano_jaqueta_de_poliester', None))
                 },
                 tratamento_volumes={
-                    'fumigacao': converter_booleano(row.get('fumigacao')),
-                    'fungos': converter_booleano(row.get('fungos')),
-                    'insetos': converter_booleano(row.get('insetos')),
-                    'higienizacao': converter_booleano(row.get('higienizacao_volumes')),
-                    'trincha': converter_booleano(row.get('trincha_macia_volumes')),
-                    'reestruturacao': converter_booleano(row.get('reestruturacao_volumes')),
-                    'lombada': converter_booleano(row.get('lombada')),
-                    'lombada_capa': converter_booleano(row.get('lombada_capa')),
-                    'folhas': converter_booleano(row.get('folhas')),
-                    'encadernacao': converter_booleano(row.get('encadernacao')),
-                    'inteira': converter_booleano(row.get('inteira_volumes')),
-                    'meia_sem_cantos': converter_booleano(row.get('meia_sem_cantos_volumes')),
-                    'costura': converter_booleano(row.get('costura')),
-                    'douracao': converter_booleano(row.get('douracao')),
-                    'punho': converter_booleano(row.get('a_punho')),
-                    'maquina': converter_booleano(row.get('a_maquina')),
-                    'acondicionamento': converter_booleano(row.get('acondicionamento_volumes')),
-                    'caixa_cruz': converter_booleano(row.get('caixa_cruz')),
-                    'caixa_cadarco': converter_booleano(row.get('caixa_cadarco')),
-                    'outro_texto': row.get('tratamento_volumes_outro', '')
+                    'fumigacao': converter_booleano(getattr(row, 'trat_vol_fumigacao', None)),
+                    'higienizacao': converter_booleano(getattr(row, 'trat_vol_higienizacao', None)),
+                    'reestruturacao': converter_booleano(getattr(row, 'trat_vol_reestruturacao', None)),
+                    'lombada': converter_booleano(getattr(row, 'trat_vol_lombada', None)),
+                    'lombada_capa': converter_booleano(getattr(row, 'trat_vol_lombada_e_capa', None))
                 }
             )
 
@@ -281,6 +262,6 @@ def importar_planilha():
 
     except Exception as e:
         db.session.rollback()
-        print(f"Erro IMPORTACAO: {e}") 
-        flash('Erro ao processar arquivo. Verifique se as colunas estão corretas.', 'danger')
+        print(f"ERRO CRÍTICO NA IMPORTAÇÃO: {e}")
+        flash(f'Erro ao processar: {str(e)}', 'danger')
         return redirect(url_for('listar_acervo'))
