@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from flask import render_template, request, redirect, url_for, current_app
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -116,3 +117,46 @@ def criar_ficha():
 def ver_ficha(id):
     ficha = Ficha.query.get_or_404(id)
     return render_template('fichas.html', ficha=ficha)
+
+@app.route('/acervo')
+def listar_acervo():
+    fichas = Ficha.query.order_by(Ficha.id.desc()).all()
+    return render_template('lista.html', fichas=fichas) 
+
+@app.route('/importar', methods=['POST'])
+def importar_planilha():
+    if 'arquivo_excel' not in request.files:
+        return "Nenhum arquivo enviado", 400
+    
+    arquivo = request.files['arquivo_excel']
+    
+    if arquivo.filename == '':
+        return "Arquivo não selecionado", 400
+
+    try:
+        if arquivo.filename.endswith('.csv'):
+            df = pd.read_csv(arquivo)
+        else:
+            df = pd.read_excel(arquivo)
+        
+        df = df.fillna('')
+
+        contador = 0
+        for index, row in df.iterrows():
+            nova_ficha = Ficha(
+                titulo=row.get('Título', 'Sem Título'),
+                autor=row.get('Autor', ''),
+                registro=str(row.get('Registro', '')),
+                numero_ficha=str(row.get('Nº Ficha', '')),
+                especificacao_material={'livro': row.get('Tipo') == 'Livro'},
+                data_preenchimento=datetime.now().date()
+            )
+            db.session.add(nova_ficha)
+            contador += 1
+        
+        db.session.commit()
+        return f"Importação concluída! {contador} fichas adicionadas."
+
+    except Exception as e:
+        print(e)
+        return f"Erro ao processar planilha: {str(e)}", 500
