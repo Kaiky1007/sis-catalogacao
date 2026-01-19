@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from app import app, db
 from .models import Ficha
+import io
+from flask import send_file
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -267,4 +269,106 @@ def importar_planilha():
         db.session.rollback()
         print(f"ERRO CRÍTICO NA IMPORTAÇÃO: {e}")
         flash(f'Erro ao processar: {str(e)}', 'danger')
+        return redirect(url_for('listar_acervo'))
+
+@app.route('/exportar')
+def exportar_planilha():
+    try:
+        fichas = Ficha.query.all()
+        
+        if not fichas:
+            flash('Não há fichas para exportar.', 'warning')
+            return redirect(url_for('listar_acervo'))
+
+        lista_dados = []
+
+        for f in fichas:
+            mat = f.especificacao_material or {}
+            sup = f.tipo_suporte or {}
+            est = f.estado_conservacao or {}
+            det = f.deterioracoes or {}
+            tpl = f.tratamento_planos or {}
+            tvol = f.tratamento_volumes or {}
+
+            linha = {
+                'id': f.numero_ficha,
+                'numero_ficha': f.numero_ficha,
+                'avaliacao': f.avaliacao,
+                'autor': f.autor,
+                'titulo': f.titulo,
+                'registro': f.registro,
+                'num_chamada': f.n_chamada,
+                'secao_guarda': f.secao_guarda,
+                'data_obra': f.data_obra,
+                'num_paginas': f.paginas,
+                'dimensoes': f.dimensoes,
+                'observacoes': f.observacoes,
+                'tecnico': f.tecnico_nome,
+                'data_preenchimento': f.data_preenchimento,
+                'foto_path': f.caminho_foto,
+
+                'espec_album': 1 if mat.get('album') else 0,
+                'espec_folheto': 1 if mat.get('folheto') else 0,
+                'espec_manuscrito': 1 if mat.get('manuscrito') else 0,
+                'espec_planta': 1 if mat.get('planta') else 0,
+                'espec_brochura': 1 if mat.get('brochura') else 0,
+                'espec_gravura': 1 if mat.get('gravura') else 0,
+                'espec_mapa': 1 if mat.get('mapa') else 0,
+                'espec_pergaminho_scroll': 1 if mat.get('pergaminho') else 0,
+                'espec_certificado': 1 if mat.get('certificado') else 0,
+                'espec_impresso': 1 if mat.get('impresso') else 0,
+                'espec_partitura': 1 if mat.get('partitura') else 0,
+                'espec_desenho': 1 if mat.get('desenho') else 0,
+                'espec_livro': 1 if mat.get('livro') else 0,
+                'espec_periodico': 1 if mat.get('periodico') else 0,
+                'material_outro': mat.get('outro_texto', ''),
+
+                'sup_papel_couche': 1 if sup.get('couche') else 0,
+                'sup_papel_jornal': 1 if sup.get('jornal') else 0,
+                'sup_papel_feito_a_mao': 1 if sup.get('feito_mao') else 0,
+                'sup_papel_madeira': 1 if sup.get('madeira') else 0,
+                'suporte_outro': sup.get('outro_texto', ''),
+
+                'enc_tipo': 'Encadernada' if est.get('encadernada') else '',
+                'sem_encadernacao': 1 if est.get('sem_encadernacao') else 0,
+                'encadernacao_inteira': 1 if est.get('inteira') else 0,
+                'meia_com_cantos': 1 if est.get('meia_com_cantos') else 0,
+                'meia_sem_cantos': 1 if est.get('meia_sem_cantos') else 0,
+
+                'det_abrasao': 1 if det.get('abrasao') else 0,
+                'det_costura_fragilizada': 1 if det.get('costura_fragil') else 0,
+                'det_mancha': 1 if det.get('mancha') else 0,
+                'det_rompimento': 1 if det.get('rompimento') else 0,
+                'det_arranhao': 1 if det.get('arranhao') else 0,
+                'det_descoloracao': 1 if det.get('descoloracao') else 0,
+                'det_perda_de_lombada': 1 if det.get('perda_lombada') else 0,
+                'det_sujidades': 1 if det.get('sujidades') else 0,
+
+                'trat_plano_diagnostico': 1 if tpl.get('diagnostico') else 0,
+                'trat_plano_higienizacao': 1 if tpl.get('higienizacao') else 0,
+                'trat_plano_reestruturacao': 1 if tpl.get('reestruturacao') else 0,
+                
+                'trat_vol_higienizacao': 1 if tvol.get('higienizacao') else 0,
+                'trat_vol_reestruturacao': 1 if tvol.get('reestruturacao') else 0,
+            }
+            lista_dados.append(linha)
+
+        df = pd.DataFrame(lista_dados)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Fichas')
+        
+        output.seek(0)
+
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='Acervo_FCJA_Exportado.xlsx'
+        )
+
+    except Exception as e:
+        print(f"Erro na exportação: {e}")
+        flash(f'Erro ao gerar planilha: {str(e)}', 'danger')
         return redirect(url_for('listar_acervo'))
