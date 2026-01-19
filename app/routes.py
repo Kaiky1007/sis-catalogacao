@@ -118,10 +118,13 @@ def listar_acervo():
     return render_template('lista.html', fichas=fichas)
 
 def converter_booleano(valor):
-    if pd.isna(valor) or valor == '': 
+    if pd.isna(valor) or valor == '':
         return False
     val_str = str(valor).lower().strip()
-    return val_str in ['sim', 's', 'true', '1', 'x', 'yes', 'checked']
+    if val_str.endswith('.0'):
+        val_str = val_str.replace('.0', '')
+    valores_true = ['sim', 's', 'true', '1', 'x', 'yes', 'checked', 'verdadeiro', 'on']
+    return val_str in valores_true
 
 def converter_avaliacao(valor):
     if pd.isna(valor): 
