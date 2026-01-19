@@ -305,7 +305,7 @@ def exportar_planilha():
                 'observacoes': f.observacoes,
                 'tecnico': f.tecnico_nome,
                 'data_preenchimento': f.data_preenchimento,
-                'foto_path': f.caminho_foto,
+                'foto_path': f.foto_path,
 
                 'espec_album': 1 if mat.get('album') else 0,
                 'espec_folheto': 1 if mat.get('folheto') else 0,
