@@ -282,82 +282,121 @@ def exportar_planilha():
 
         lista_dados = []
 
+        def processar_multiplos(dados_json, mapa_nomes):
+            if not dados_json: return ""
+            itens_encontrados = []
+            
+            for chave_db, nome_legivel in mapa_nomes.items():
+                if dados_json.get(chave_db):
+                    itens_encontrados.append(nome_legivel)
+            
+            outro = dados_json.get('outro_texto')
+            if outro and str(outro).strip():
+                itens_encontrados.append(f"Outro: {outro}")
+            
+            return ", ".join(itens_encontrados)
+
+        def traduzir_avaliacao(valor):
+            if valor == 1: return "Bom"
+            if valor == 3: return "Mau"
+            return "Regular"
+
+        mapa_material = {
+            'album': 'Álbum', 'folheto': 'Folheto', 'manuscrito': 'Manuscrito',
+            'planta': 'Planta', 'brochura': 'Brochura', 'gravura': 'Gravura',
+            'mapa': 'Mapa', 'pergaminho': 'Pergaminho', 'certificado': 'Certificado',
+            'impresso': 'Impresso', 'partitura': 'Partitura', 'desenho': 'Desenho',
+            'livro': 'Livro', 'periodico': 'Periódico'
+        }
+
+        mapa_suporte = {
+            'couche': 'Papel Couchê', 'jornal': 'Papel Jornal',
+            'feito_mao': 'Papel Feito à Mão', 'madeira': 'Papel Madeira',
+            'trapo': 'Papel de Trapo', 'marmorizado': 'Papel Marmorizado'
+        }
+
+        mapa_estado = {
+            'encadernada': 'Encadernada', 'sem_encadernacao': 'Sem Encadernação',
+            'inteira': 'Enc. Inteira', 'meia_com_cantos': '½ com cantos',
+            'meia_sem_cantos': '½ sem cantos', 'capa_couro': 'Capa Couro',
+            'capa_tecido': 'Capa Tecido', 'tapa_madeira': 'Tapa Madeira',
+            'tapa_papelao': 'Tapa Papelão'
+        }
+
+        mapa_deterioracoes = {
+            'abrasao': 'Abrasão', 'costura_fragil': 'Costura Fragilizada',
+            'mancha': 'Mancha', 'rompimento': 'Rompimento', 'arranhao': 'Arranhão',
+            'descoloracao': 'Descoloração', 'perda_lombada': 'Perda de Lombada',
+            'sujidades': 'Sujidades', 'fungos': 'Fungos', 
+            'oxidacao': 'Oxidação', 'lombada_quebrada': 'Lombada Quebrada'
+        }
+
+        mapa_plano = {
+            'diagnostico': 'Diagnóstico', 'higienizacao': 'Higienização',
+            'retirada_sujidades': 'Retirada Sujidades', 'retirada_fitas': 'Retirada Fitas',
+            'desacidificacao': 'Desacidificação', 'arrefecimento': 'Arrefecimento',
+            'reestruturacao': 'Reestruturação', 'remendos': 'Remendos',
+            'enxertos': 'Enxertos', 'velaturas': 'Velaturas',
+            'planificacao': 'Planificação', 'acondicionamento': 'Acondicionamento',
+            'portfolio': 'Portfólio', 'passe_partout': 'Passe-partout',
+            'pasta': 'Pasta', 'envelope': 'Envelope', 'jaqueta': 'Jaqueta'
+        }
+
+        mapa_volume = {
+            'fumigacao': 'Fumigação', 'fungos': 'Trat. Fungos', 'insetos': 'Trat. Insetos',
+            'higienizacao': 'Higienização', 'trincha': 'Trincha',
+            'reestruturacao': 'Reestruturação', 'lombada': 'Lombada',
+            'lombada_capa': 'Lombada e Capa', 'folhas': 'Folhas',
+            'encadernacao': 'Encadernação', 'inteira': 'Inteira',
+            'meia_sem_cantos': '½ Sem cantos', 'costura': 'Costura',
+            'douracao': 'Douração', 'punho': 'A Punho', 'maquina': 'À Máquina',
+            'acondicionamento': 'Acondicionamento', 'caixa_cruz': 'Caixa Cruz',
+            'caixa_cadarco': 'Caixa Cadarço'
+        }
+
         for f in fichas:
-            mat = f.especificacao_material or {}
-            sup = f.tipo_suporte or {}
-            est = f.estado_conservacao or {}
-            det = f.deterioracoes or {}
-            tpl = f.tratamento_planos or {}
-            tvol = f.tratamento_volumes or {}
-
             linha = {
-                'id': f.numero_ficha,
-                'numero_ficha': f.numero_ficha,
-                'avaliacao': f.avaliacao,
-                'autor': f.autor,
-                'titulo': f.titulo,
-                'registro': f.registro,
-                'num_chamada': f.n_chamada,
-                'secao_guarda': f.secao_guarda,
-                'data_obra': f.data_obra,
-                'num_paginas': f.paginas,
-                'dimensoes': f.dimensoes,
-                'observacoes': f.observacoes,
-                'tecnico': f.tecnico_nome,
-                'data_preenchimento': f.data_preenchimento,
-                'foto_path': f.foto_path,
-
-                'espec_album': 1 if mat.get('album') else 0,
-                'espec_folheto': 1 if mat.get('folheto') else 0,
-                'espec_manuscrito': 1 if mat.get('manuscrito') else 0,
-                'espec_planta': 1 if mat.get('planta') else 0,
-                'espec_brochura': 1 if mat.get('brochura') else 0,
-                'espec_gravura': 1 if mat.get('gravura') else 0,
-                'espec_mapa': 1 if mat.get('mapa') else 0,
-                'espec_pergaminho_scroll': 1 if mat.get('pergaminho') else 0,
-                'espec_certificado': 1 if mat.get('certificado') else 0,
-                'espec_impresso': 1 if mat.get('impresso') else 0,
-                'espec_partitura': 1 if mat.get('partitura') else 0,
-                'espec_desenho': 1 if mat.get('desenho') else 0,
-                'espec_livro': 1 if mat.get('livro') else 0,
-                'espec_periodico': 1 if mat.get('periodico') else 0,
-                'material_outro': mat.get('outro_texto', ''),
-
-                'sup_papel_couche': 1 if sup.get('couche') else 0,
-                'sup_papel_jornal': 1 if sup.get('jornal') else 0,
-                'sup_papel_feito_a_mao': 1 if sup.get('feito_mao') else 0,
-                'sup_papel_madeira': 1 if sup.get('madeira') else 0,
-                'suporte_outro': sup.get('outro_texto', ''),
-
-                'enc_tipo': 'Encadernada' if est.get('encadernada') else '',
-                'sem_encadernacao': 1 if est.get('sem_encadernacao') else 0,
-                'encadernacao_inteira': 1 if est.get('inteira') else 0,
-                'meia_com_cantos': 1 if est.get('meia_com_cantos') else 0,
-                'meia_sem_cantos': 1 if est.get('meia_sem_cantos') else 0,
-
-                'det_abrasao': 1 if det.get('abrasao') else 0,
-                'det_costura_fragilizada': 1 if det.get('costura_fragil') else 0,
-                'det_mancha': 1 if det.get('mancha') else 0,
-                'det_rompimento': 1 if det.get('rompimento') else 0,
-                'det_arranhao': 1 if det.get('arranhao') else 0,
-                'det_descoloracao': 1 if det.get('descoloracao') else 0,
-                'det_perda_de_lombada': 1 if det.get('perda_lombada') else 0,
-                'det_sujidades': 1 if det.get('sujidades') else 0,
-
-                'trat_plano_diagnostico': 1 if tpl.get('diagnostico') else 0,
-                'trat_plano_higienizacao': 1 if tpl.get('higienizacao') else 0,
-                'trat_plano_reestruturacao': 1 if tpl.get('reestruturacao') else 0,
-                
-                'trat_vol_higienizacao': 1 if tvol.get('higienizacao') else 0,
-                'trat_vol_reestruturacao': 1 if tvol.get('reestruturacao') else 0,
+                'ID': f.numero_ficha,
+                'Avaliação': traduzir_avaliacao(f.avaliacao),
+                'Autor': f.autor,
+                'Título': f.titulo,
+                'Registro': f.registro,
+                'Nº Chamada': f.n_chamada,
+                'Seção': f.secao_guarda,
+                'Data Obra': f.data_obra,
+                'Páginas': f.paginas,
+                'Dimensões': f.dimensoes,
+                'Especificação do Material': processar_multiplos(f.especificacao_material, mapa_material),
+                'Tipo de Suporte': processar_multiplos(f.tipo_suporte, mapa_suporte),
+                'Estado de Conservação': processar_multiplos(f.estado_conservacao, mapa_estado),
+                'Deteriorações': processar_multiplos(f.deterioracoes, mapa_deterioracoes),
+                'Tratamento (Planos)': processar_multiplos(f.tratamento_planos, mapa_plano),
+                'Tratamento (Volumes)': processar_multiplos(f.tratamento_volumes, mapa_volume),
+                'Observações': f.observacoes,
+                'Técnico': f.tecnico_nome,
+                'Data Preenchimento': f.data_preenchimento,
+                'Foto': f.foto_path
             }
             lista_dados.append(linha)
 
         df = pd.DataFrame(lista_dados)
+        
+        colunas_ordem = ['ID', 'Título', 'Autor', 'Avaliação', 'Especificação do Material', 
+                         'Tipo de Suporte', 'Estado de Conservação', 'Deteriorações', 
+                         'Tratamento (Planos)', 'Tratamento (Volumes)', 'Observações', 'Técnico']
+        cols_existentes = [c for c in colunas_ordem if c in df.columns]
+        cols_restantes = [c for c in df.columns if c not in cols_existentes]
+        df = df[cols_existentes + cols_restantes]
 
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Fichas')
+            df.to_excel(writer, index=False, sheet_name='Acervo Consolidado')
+            
+            worksheet = writer.sheets['Acervo Consolidado']
+            for column_cells in worksheet.columns:
+                length = max(len(str(cell.value)) for cell in column_cells)
+                if length > 50: length = 50
+                worksheet.column_dimensions[column_cells[0].column_letter].width = length + 2
         
         output.seek(0)
 
@@ -365,7 +404,7 @@ def exportar_planilha():
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name='Acervo_FCJA_Exportado.xlsx'
+            download_name='Relatorio_Resumido.xlsx'
         )
 
     except Exception as e:
