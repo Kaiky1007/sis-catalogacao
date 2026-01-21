@@ -7,9 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styleficha.css') }}">
 </head>
 <body>
-    
     <form action="{{ url_for('criar_ficha') }}" method="POST" enctype="multipart/form-data">
-        
         <div class="ficha">
             <table>
                 <tr>
@@ -34,7 +32,6 @@
                         </div>
                     </td>
                 </tr>
-                
                 <tr>
                     <td colspan="5" class="subtitulo">IDENTIFICAÇÃO</td>
                 </tr>
@@ -52,7 +49,6 @@
                     <td>Nº de Páginas: <input type="text" name="paginas" value="{{ ficha.paginas if ficha else '' }}"></td>
                     <td colspan="3">Dimensões (C x L x E): <input type="text" name="dimensoes" value="{{ ficha.dimensoes if ficha else '' }}"></td>
                 </tr>
-
                 <tr>
                     <td colspan="5" class="subtitulo">ESPECIFICAÇÃO DO MATERIAL</td>
                 </tr>
@@ -84,7 +80,6 @@
                     <td></td>
                     <td></td>
                 </tr>
-
                 <tr>
                     <td colspan="5" class="subtitulo">TIPO DE SUPORTE DA OBRA</td>
                 </tr>
@@ -95,7 +90,6 @@
                     <td><input type="checkbox" name="suporte_madeira" {% if ficha and ficha.tipo_suporte.get('madeira') %}checked{% endif %}> papel madeira</td>
                     <td>Outro: <input type="text" name="suporte_outro" value="{{ ficha.tipo_suporte.get('outro_texto', '') if ficha and ficha.tipo_suporte else '' }}"></td>
                 </tr>
-
                 <tr>
                     <td colspan="5" class="subtitulo">ESTADO GERAL DE CONSERVAÇÃO</td>
                 </tr>
@@ -118,7 +112,6 @@
                         <label><input type="checkbox" name="estado_meia_sem_cantos" {% if ficha and ficha.estado_conservacao.get('meia_sem_cantos') %}checked{% endif %}> ½ sem cantos</label>
                     </td>
                 </tr>
-
                 <tr>
                     <td colspan="5" class="subtitulo">PRINCIPAIS DETERIORAÇÕES</td>
                 </tr>
@@ -136,7 +129,6 @@
                     <td><input type="checkbox" name="det_sujidades" {% if ficha and ficha.deterioracoes.get('sujidades') %}checked{% endif %}> sujidades</td>
                     <td></td>
                 </tr>
-
                 <tr>
                     <td colspan="5" class="titulo">MÉTODO DE CONSERVAÇÃO DE OBRAS</td>
                 </tr>
@@ -185,7 +177,6 @@
                     <td><input type="checkbox" name="trat_plano_jaqueta" {% if ficha and ficha.tratamento_planos.get('jaqueta') %}checked{% endif %}> jaqueta de poliéster</td>
                     <td colspan="2"></td>
                 </tr>
-
                 <tr>
                     <td colspan="5"><strong>2- TRATAMENTO TÉCNICO DE CONSERVAÇÃO – VOLUMES</strong></td>
                 </tr>
@@ -230,20 +221,27 @@
                     <td><input type="checkbox" name="trat_vol_caixa_cadarco" {% if ficha and ficha.tratamento_volumes.get('caixa_cadarco') %}checked{% endif %}> caixa com cadarço</td>
                     <td colspan="2"></td>
                 </tr>
-
                 <tr>
                     <td colspan="3">
                         <strong>OBSERVAÇÕES:</strong><br>
                         <textarea name="observacoes" rows="5" style="width: 100%;">{{ ficha.observacoes if ficha else '' }}</textarea>
                     </td>
-                    <td colspan="2" style="text-align:center; background:#eee; padding: 10px;">
-                        {% if ficha and ficha.foto_path %}
-                            <img src="{{ url_for('static', filename=ficha.foto_path) }}" class="img-preview">
-                            <br>
-                        {% else %}
-                            <div style="padding: 20px; color: #777;">FOTO INDISPONÍVEL</div>
-                        {% endif %}
-                        <input type="file" name="foto" accept="image/*" style="margin-top: 10px;">
+                    <td colspan="2" style="text-align:center; background:#f8f9fa; padding: 10px; vertical-align: top;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 10px;">
+                            {% if ficha and ficha.imagens %}
+                                {% for img in ficha.imagens %}
+                                    <a href="{{ url_for('static', filename=img.caminho) }}" target="_blank">
+                                        <img src="{{ url_for('static', filename=img.caminho) }}" 
+                                             style="width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" 
+                                             title="Clique para ampliar">
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <div style="color: #999; font-size: 0.9em; padding: 20px;">Sem fotos</div>
+                            {% endif %}
+                        </div>
+                        <label style="font-weight: bold; font-size: 0.9em; display: block; margin-bottom: 5px;">Adicionar Fotos:</label>
+                        <input type="file" name="fotos" multiple accept="image/*" class="form-control form-control-sm">
                     </td>
                 </tr>
                 <tr>
@@ -251,14 +249,12 @@
                     <td colspan="2">Data: <input type="date" name="data_preenchimento" value="{{ ficha.data_preenchimento if ficha else '' }}"></td>
                 </tr>
             </table>
-            
             <div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
                 <button type="submit" class="btn-salvar" style="padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer;">Salvar Ficha</button>
                 <a href="{{ url_for('listar_acervo') }}" style="margin-left: 20px; text-decoration: none; color: #333; padding: 10px; border: 1px solid #ccc;">Voltar ao Acervo</a>
             </div>
-
         </div>
     </form>
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
