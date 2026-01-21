@@ -1,17 +1,36 @@
 import os
-import pandas as pd
-from flask import render_template, request, redirect, url_for, current_app, flash
-from werkzeug.utils import secure_filename
-from datetime import datetime
-from app import app, db
-from .models import Ficha
+import uuid
 import io
-from flask import send_file
+import pandas as pd
+from datetime import datetime
+from flask import render_template, request, redirect, url_for, flash, send_file
+from werkzeug.utils import secure_filename
+from app import app, db
+from .models import Ficha, Imagem
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def converter_booleano(valor):
+    if pd.isna(valor) or valor == '': return False
+    if isinstance(valor, bool): return valor
+    val_str = str(valor).lower().strip()
+    try:
+        numero = float(val_str.replace(',', '.'))
+        return numero > 0
+    except ValueError: pass
+    return val_str in ['sim', 's', 'true', 'x', 'yes', 'checked', 'on', 'verdadeiro']
+
+def converter_avaliacao(valor):
+    if pd.isna(valor): return 2
+    val_str = str(valor).lower().strip()
+    if val_str in ['1', 'bom']: return 1
+    if val_str in ['3', 'mau', 'ruim']: return 3
+    return 2
 
 def processar_grupo_checkbox(prefixo, lista_opcoes, form_data):
     resultado = {}
@@ -22,121 +41,116 @@ def processar_grupo_checkbox(prefixo, lista_opcoes, form_data):
     campo_outro = form_data.get(f"{prefixo}_outro")
     if campo_outro:
         resultado['outro_texto'] = campo_outro
-        
     return resultado
+
+def salvar_imagens(lista_arquivos, ficha_obj):
+    count = 0
+    for arquivo in lista_arquivos:
+        if arquivo and allowed_file(arquivo.filename):
+            filename = secure_filename(arquivo.filename)
+            novo_nome = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}_{filename}"
+            
+            caminho_relativo = f"uploads/{novo_nome}"
+            caminho_absoluto = os.path.join(UPLOAD_FOLDER, novo_nome)
+            
+            try:
+                arquivo.save(caminho_absoluto)
+                nova_img = Imagem(caminho=caminho_relativo, ficha=ficha_obj)
+                db.session.add(nova_img)
+                count += 1
+            except Exception as e:
+                print(f"Erro ao salvar imagem {filename}: {e}")
+    return count
 
 @app.route('/')
 def index():
-    fichas = Ficha.query.order_by(Ficha.id.desc()).all()
-    return render_template('index.html', fichas=fichas)
-
-@app.route('/nova')
-def nova_ficha():
-    return render_template('fichas.html', ficha=None)
-
-@app.route('/criar', methods=['POST'])
-def criar_ficha():
-    try:
-        caminho_relativo = None
-        if 'foto' in request.files:
-            file = request.files['foto']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-                
-                upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
-                os.makedirs(upload_folder, exist_ok=True)
-                
-                file.save(os.path.join(upload_folder, filename))
-                caminho_relativo = f"uploads/{filename}"
-
-        data_str = request.form.get('data_preenchimento')
-        data_obj = None
-        if data_str:
-            data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
-        else:
-            data_obj = datetime.now().date()
-
-        nova_ficha = Ficha(
-            numero_ficha=request.form.get('numero_ficha'),
-            avaliacao=request.form.get('avaliacao'),
-            autor=request.form.get('autor'),
-            titulo=request.form.get('titulo'),
-            registro=request.form.get('registro'),
-            n_chamada=request.form.get('n_chamada'),
-            secao_guarda=request.form.get('secao_guarda'),
-            data_obra=request.form.get('data_obra'),
-            paginas=request.form.get('paginas'),
-            dimensoes=request.form.get('dimensoes'),
-            observacoes=request.form.get('observacoes'),
-            tecnico_nome=request.form.get('tecnico_nome'),
-            data_preenchimento=data_obj,
-            foto_path=caminho_relativo,
-            especificacao_material=processar_grupo_checkbox('material', 
-                ['album', 'folheto', 'manuscrito', 'planta', 'brochura', 'gravura', 
-                 'mapa', 'pergaminho', 'certificado', 'impresso', 'partitura', 'desenho', 'livro', 'periodico'], 
-                request.form),
-            tipo_suporte=processar_grupo_checkbox('suporte', 
-                ['couche', 'jornal', 'feito_mao', 'madeira'], 
-                request.form),
-            estado_conservacao=processar_grupo_checkbox('estado', 
-                ['encadernada', 'sem_encadernacao', 'inteira', 'meia_com_cantos', 'meia_sem_cantos'], 
-                request.form),
-            deterioracoes=processar_grupo_checkbox('det', 
-                ['abrasao', 'costura_fragil', 'mancha', 'rompimento', 'arranhao', 
-                 'descoloracao', 'perda_lombada', 'sujidades'], 
-                request.form),
-            tratamento_planos=processar_grupo_checkbox('trat_plano', 
-                ['diagnostico', 'retirada_sujidades', 'trincha', 'higienizacao', 'retirada_fitas', 
-                 'po_borracha', 'desacidificacao', 'arrefecimento', 'reestruturacao', 'remendos', 
-                 'enxertos', 'velaturas', 'planificacao', 'acondicionamento', 'portfolio', 
-                 'passe_partout', 'pasta', 'envelope', 'jaqueta'], 
-                request.form),
-            tratamento_volumes=processar_grupo_checkbox('trat_vol', 
-                ['fumigacao', 'fungos', 'insetos', 'higienizacao', 'trincha', 'reestruturacao', 
-                 'lombada', 'lombada_capa', 'folhas', 'encadernacao', 'inteira', 'meia_sem_cantos', 
-                 'costura', 'douracao', 'punho', 'maquina', 'acondicionamento', 'caixa_cruz', 'caixa_cadarco'], 
-                request.form)
-        )
-
-        db.session.add(nova_ficha)
-        db.session.commit()
-        
-        return redirect(url_for('ver_ficha', id=nova_ficha.id))
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Erro ao salvar: {e}")
-        return "Erro ao salvar a ficha. Verifique o console.", 500
-
-@app.route('/ficha/<int:id>')
-def ver_ficha(id):
-    ficha = Ficha.query.get_or_404(id)
-    return render_template('fichas.html', ficha=ficha)
+    return render_template('index.html')
 
 @app.route('/acervo')
 def listar_acervo():
     fichas = Ficha.query.order_by(Ficha.id.desc()).all()
     return render_template('lista.html', fichas=fichas)
 
-def converter_booleano(valor):
-    if pd.isna(valor) or valor == '':
-        return False
-    val_str = str(valor).lower().strip()
-    if val_str.endswith('.0'):
-        val_str = val_str.replace('.0', '')
-    valores_true = ['sim', 's', 'true', '1', 'x', 'yes', 'checked', 'verdadeiro', 'on']
-    return val_str in valores_true
+@app.route('/nova')
+def nova_ficha():
+    return render_template('fichas.html', ficha=None)
 
-def converter_avaliacao(valor):
-    if pd.isna(valor): 
-        return 2
-    val_str = str(valor).lower().strip()
-    if val_str in ['1', 'bom']: 
-        return 1
-    if val_str in ['3', 'mau', 'ruim']: 
-        return 3
-    return 2
+@app.route('/ficha/<int:id>')
+def ver_ficha(id):
+    ficha = Ficha.query.get_or_404(id)
+    return render_template('fichas.html', ficha=ficha)
+
+@app.route('/criar', methods=['POST'])
+def criar_ficha():
+    try:
+        num_ficha = request.form.get('numero_ficha')
+        
+        ficha = Ficha.query.filter_by(numero_ficha=num_ficha).first()
+        if not ficha:
+            ficha = Ficha(numero_ficha=num_ficha)
+            db.session.add(ficha)
+        
+        ficha.avaliacao = request.form.get('avaliacao')
+        ficha.autor = request.form.get('autor')
+        ficha.titulo = request.form.get('titulo')
+        ficha.registro = request.form.get('registro')
+        ficha.n_chamada = request.form.get('n_chamada')
+        ficha.secao_guarda = request.form.get('secao_guarda')
+        ficha.data_obra = request.form.get('data_obra')
+        ficha.paginas = request.form.get('paginas')
+        ficha.dimensoes = request.form.get('dimensoes')
+        ficha.observacoes = request.form.get('observacoes')
+        ficha.tecnico_nome = request.form.get('tecnico_nome')
+
+        data_str = request.form.get('data_preenchimento')
+        if data_str:
+            ficha.data_preenchimento = datetime.strptime(data_str, '%Y-%m-%d').date()
+        else:
+            ficha.data_preenchimento = datetime.now().date()
+
+        ficha.especificacao_material = processar_grupo_checkbox('material', 
+            ['album', 'folheto', 'manuscrito', 'planta', 'brochura', 'gravura', 
+             'mapa', 'pergaminho', 'certificado', 'impresso', 'partitura', 'desenho', 'livro', 'periodico'], 
+            request.form)
+
+        ficha.tipo_suporte = processar_grupo_checkbox('suporte', 
+            ['couche', 'jornal', 'feito_mao', 'madeira'], 
+            request.form)
+
+        ficha.estado_conservacao = processar_grupo_checkbox('estado', 
+            ['encadernada', 'sem_encadernacao', 'inteira', 'meia_com_cantos', 'meia_sem_cantos'], 
+            request.form)
+
+        ficha.deterioracoes = processar_grupo_checkbox('det', 
+            ['abrasao', 'costura_fragil', 'mancha', 'rompimento', 'arranhao', 
+             'descoloracao', 'perda_lombada', 'sujidades'], 
+            request.form)
+
+        ficha.tratamento_planos = processar_grupo_checkbox('trat_plano', 
+            ['diagnostico', 'retirada_sujidades', 'trincha', 'higienizacao', 'retirada_fitas', 
+             'po_borracha', 'desacidificacao', 'arrefecimento', 'reestruturacao', 'remendos', 
+             'enxertos', 'velaturas', 'planificacao', 'acondicionamento', 'portfolio', 
+             'passe_partout', 'pasta', 'envelope', 'jaqueta'], 
+            request.form)
+
+        ficha.tratamento_volumes = processar_grupo_checkbox('trat_vol', 
+            ['fumigacao', 'fungos', 'insetos', 'higienizacao', 'trincha', 'reestruturacao', 
+             'lombada', 'lombada_capa', 'folhas', 'encadernacao', 'inteira', 'meia_sem_cantos', 
+             'costura', 'douracao', 'punho', 'maquina', 'acondicionamento', 'caixa_cruz', 'caixa_cadarco'], 
+            request.form)
+
+        db.session.commit()
+
+        fotos = request.files.getlist('fotos')
+        salvar_imagens(fotos, ficha)
+        db.session.commit()
+        
+        return redirect(url_for('ver_ficha', id=ficha.id))
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro ao salvar: {e}")
+        return f"Erro ao salvar: {e}", 500
 
 @app.route('/importar', methods=['POST'])
 def importar_planilha():
@@ -156,11 +170,11 @@ def importar_planilha():
             df = pd.read_excel(arquivo)
         
         df.columns = df.columns.str.strip()
-
         imported_count = 0
         
         for row in df.itertuples(index=False):
-            num_ficha = str(getattr(row, 'id', getattr(row, 'numero_ficha', ''))).split('.')[0]
+            raw_id = getattr(row, 'id', getattr(row, 'numero_ficha', ''))
+            num_ficha = str(raw_id).split('.')[0]
             
             if not num_ficha or Ficha.query.filter_by(numero_ficha=num_ficha).first():
                 continue 
@@ -185,6 +199,7 @@ def importar_planilha():
                 observacoes=getattr(row, 'observacoes', ''),
                 tecnico_nome=getattr(row, 'tecnico', ''),
                 data_preenchimento=data_final,
+                
                 especificacao_material={
                     'album': converter_booleano(getattr(row, 'espec_album', None)),
                     'folheto': converter_booleano(getattr(row, 'espec_folheto', None)),
@@ -259,6 +274,12 @@ def importar_planilha():
             )
 
             db.session.add(nova_ficha)
+            
+            caminho_antigo = getattr(row, 'foto_path', getattr(row, 'caminho_foto', ''))
+            if caminho_antigo and str(caminho_antigo).strip():
+                nova_img = Imagem(caminho=str(caminho_antigo).strip(), ficha=nova_ficha)
+                db.session.add(nova_img)
+
             imported_count += 1
         
         db.session.commit()
@@ -275,7 +296,6 @@ def importar_planilha():
 def exportar_planilha():
     try:
         fichas = Ficha.query.all()
-        
         if not fichas:
             flash('Não há fichas para exportar.', 'warning')
             return redirect(url_for('listar_acervo'))
@@ -285,15 +305,12 @@ def exportar_planilha():
         def processar_multiplos(dados_json, mapa_nomes):
             if not dados_json: return ""
             itens_encontrados = []
-            
             for chave_db, nome_legivel in mapa_nomes.items():
                 if dados_json.get(chave_db):
                     itens_encontrados.append(nome_legivel)
-            
             outro = dados_json.get('outro_texto')
             if outro and str(outro).strip():
                 itens_encontrados.append(f"Outro: {outro}")
-            
             return ", ".join(itens_encontrados)
 
         def traduzir_avaliacao(valor):
@@ -308,13 +325,11 @@ def exportar_planilha():
             'impresso': 'Impresso', 'partitura': 'Partitura', 'desenho': 'Desenho',
             'livro': 'Livro', 'periodico': 'Periódico'
         }
-
         mapa_suporte = {
             'couche': 'Papel Couchê', 'jornal': 'Papel Jornal',
             'feito_mao': 'Papel Feito à Mão', 'madeira': 'Papel Madeira',
             'trapo': 'Papel de Trapo', 'marmorizado': 'Papel Marmorizado'
         }
-
         mapa_estado = {
             'encadernada': 'Encadernada', 'sem_encadernacao': 'Sem Encadernação',
             'inteira': 'Enc. Inteira', 'meia_com_cantos': '½ com cantos',
@@ -322,15 +337,12 @@ def exportar_planilha():
             'capa_tecido': 'Capa Tecido', 'tapa_madeira': 'Tapa Madeira',
             'tapa_papelao': 'Tapa Papelão'
         }
-
         mapa_deterioracoes = {
             'abrasao': 'Abrasão', 'costura_fragil': 'Costura Fragilizada',
             'mancha': 'Mancha', 'rompimento': 'Rompimento', 'arranhao': 'Arranhão',
             'descoloracao': 'Descoloração', 'perda_lombada': 'Perda de Lombada',
-            'sujidades': 'Sujidades', 'fungos': 'Fungos', 
-            'oxidacao': 'Oxidação', 'lombada_quebrada': 'Lombada Quebrada'
+            'sujidades': 'Sujidades', 'fungos': 'Fungos', 'oxidacao': 'Oxidação', 'lombada_quebrada': 'Lombada Quebrada'
         }
-
         mapa_plano = {
             'diagnostico': 'Diagnóstico', 'higienizacao': 'Higienização',
             'retirada_sujidades': 'Retirada Sujidades', 'retirada_fitas': 'Retirada Fitas',
@@ -341,7 +353,6 @@ def exportar_planilha():
             'portfolio': 'Portfólio', 'passe_partout': 'Passe-partout',
             'pasta': 'Pasta', 'envelope': 'Envelope', 'jaqueta': 'Jaqueta'
         }
-
         mapa_volume = {
             'fumigacao': 'Fumigação', 'fungos': 'Trat. Fungos', 'insetos': 'Trat. Insetos',
             'higienizacao': 'Higienização', 'trincha': 'Trincha',
@@ -355,6 +366,8 @@ def exportar_planilha():
         }
 
         for f in fichas:
+            caminhos_imagens = "; ".join([img.caminho for img in f.imagens])
+
             linha = {
                 'ID': f.numero_ficha,
                 'Avaliação': traduzir_avaliacao(f.avaliacao),
@@ -375,7 +388,7 @@ def exportar_planilha():
                 'Observações': f.observacoes,
                 'Técnico': f.tecnico_nome,
                 'Data Preenchimento': f.data_preenchimento,
-                'Foto': f.foto_path
+                'Foto': caminhos_imagens
             }
             lista_dados.append(linha)
 
@@ -383,7 +396,7 @@ def exportar_planilha():
         
         colunas_ordem = ['ID', 'Título', 'Autor', 'Avaliação', 'Especificação do Material', 
                          'Tipo de Suporte', 'Estado de Conservação', 'Deteriorações', 
-                         'Tratamento (Planos)', 'Tratamento (Volumes)', 'Observações', 'Técnico']
+                         'Tratamento (Planos)', 'Tratamento (Volumes)', 'Observações', 'Técnico', 'Foto']
         cols_existentes = [c for c in colunas_ordem if c in df.columns]
         cols_restantes = [c for c in df.columns if c not in cols_existentes]
         df = df[cols_existentes + cols_restantes]
@@ -391,7 +404,6 @@ def exportar_planilha():
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='Acervo Consolidado')
-            
             worksheet = writer.sheets['Acervo Consolidado']
             for column_cells in worksheet.columns:
                 length = max(len(str(cell.value)) for cell in column_cells)
@@ -399,13 +411,8 @@ def exportar_planilha():
                 worksheet.column_dimensions[column_cells[0].column_letter].width = length + 2
         
         output.seek(0)
-
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name='Relatorio_Resumido.xlsx'
-        )
+        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                         as_attachment=True, download_name='Relatorio_Resumido.xlsx')
 
     except Exception as e:
         print(f"Erro na exportação: {e}")
