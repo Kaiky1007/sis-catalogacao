@@ -152,6 +152,32 @@ def criar_ficha():
         print(f"Erro ao salvar: {e}")
         return f"Erro ao salvar: {e}", 500
 
+@app.route('/deletar/<int:id>', methods=['POST'])
+def deletar_ficha(id):
+    ficha = Ficha.query.get_or_404(id)
+    
+    try:
+        # Passo 1: Apagar os arquivos físicos de imagem da pasta uploads
+        for imagem in ficha.imagens:
+            # Constrói o caminho completo do arquivo
+            caminho_absoluto = os.path.join('app', 'static', imagem.caminho)
+            if os.path.exists(caminho_absoluto):
+                os.remove(caminho_absoluto)
+        
+        # Passo 2: Deletar a ficha do banco de dados
+        # O SQLAlchemy se encarrega de deletar as linhas da tabela 'imagens' 
+        # automaticamente por causa do cascade='all, delete-orphan' no models.py
+        db.session.delete(ficha)
+        db.session.commit()
+        
+        flash('Ficha e imagens excluídas com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro ao excluir ficha: {e}")
+        flash(f'Erro ao excluir a ficha: {str(e)}', 'danger')
+        
+    return redirect(url_for('listar_acervo'))    
+
 @app.route('/importar', methods=['POST'])
 def importar_planilha():
     if 'arquivo_excel' not in request.files:
