@@ -249,9 +249,14 @@
                     <td colspan="2">Data: <input type="date" name="data_preenchimento" value="{{ ficha.data_preenchimento if ficha else '' }}"></td>
                 </tr>
             </table>
-            <div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
+            <div style="text-align: center; margin-top: 20px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center;">
                 <button type="submit" class="btn-salvar" style="padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer;">Salvar Ficha</button>
                 <a href="{{ url_for('listar_acervo') }}" style="margin-left: 20px; text-decoration: none; color: #333; padding: 10px; border: 1px solid #ccc;">Voltar ao Acervo</a>
+                {% if ficha %}
+                    <form action="{{ url_for('deletar_ficha', id=ficha.id) }}" method="POST" style="margin-left: 20px;" onsubmit="return confirm('Tem certeza que deseja excluir esta ficha? Não será possível recuperar os dados e imagens.');">
+                        <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; cursor: pointer;">Excluir Ficha</button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </form>
